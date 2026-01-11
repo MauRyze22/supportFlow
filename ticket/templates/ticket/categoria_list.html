@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Categorías - SupportFlow{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="mb-8">
+    <div class="flex items-center gap-3 mb-2">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+            <i data-lucide="tags" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+            <h1 class="text-3xl font-bold text-white">Categorías</h1>
+            <p class="text-slate-400">Explora todas las categorías disponibles para organizar tickets</p>
+        </div>
+    </div>
+</div>
+
+<!-- Grid de Categorías -->
+{% if categorias %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for categoria in categorias %}
+    <a href="{% url 'categoria_detail' categoria.id %}" 
+       class="group block rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+       style="border-left: 4px solid {{ categoria.color }};">
+        
+        <div class="p-6">
+            <!-- Header de la Card -->
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110"
+                     style="background: {{ categoria.color }}20;">
+                    <i data-lucide="tag" class="w-7 h-7" style="color: {{ categoria.color }};"></i>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-slate-700/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-1">
+                    <i data-lucide="arrow-right" class="w-5 h-5 text-slate-400"></i>
+                </div>
+            </div>
+            
+            <!-- Nombre -->
+            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-violet-400 transition-colors">
+                {{ categoria.nombre }}
+            </h3>
+            
+            <!-- Descripción -->
+            <p class="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">
+                {{ categoria.descripcion|truncatewords:20 }}
+            </p>
+            
+            <!-- Footer -->
+            <div class="flex items-center justify-between pt-4 border-t border-slate-700/50">
+                <div class="flex items-center gap-2 text-slate-500 text-sm">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>hace {{ categoria.created|timesince }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-lg transition-colors"
+                     style="background: {{ categoria.color }}10; color: {{ categoria.color }};">
+                    <i data-lucide="ticket" class="w-4 h-4"></i>
+                    <span>Ver tickets</span>
+                </div>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+
+<!-- Estado Vacío -->
+<div class="text-center py-16">
+    <div class="inline-flex items-center justify-center w-24 h-24 bg-slate-800 rounded-full mb-6">
+        <i data-lucide="tags" class="w-12 h-12 text-slate-600"></i>
+    </div>
+    <h3 class="text-2xl font-bold text-white mb-2">No hay categorías</h3>
+    <p class="text-slate-400 mb-6">Aún no se han creado categorías en el sistema.</p>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+lucide.createIcons();
+</script>
+{% endblock %}
