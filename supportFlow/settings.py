@@ -9,8 +9,9 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-f&7_zi2j4401ua+w130jhhwwtc7xcpzawweojwyy+u026f$l-_'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default = False, cast = bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOST', default = '').split(',')
 
 
 # Application definition
@@ -37,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ticket',
+    'ticket.apps.TicketConfig',
     'accounts',
 ]
 
@@ -78,8 +79,13 @@ WSGI_APPLICATION = 'supportFlow.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': config('DB_NAME', default = ''),
+        'USER': config('DB_USER', default = ''),
+        'PASSWORD': config('DB_PASSWORD', default = ''),
+        'HOST': config('DB_HOST', default = ''),
+        'PORT': config('DB_PORT', default = ''),
+        
     }
 }
 
@@ -119,26 +125,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR/'static']
-
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  
+]
 MEDIA_URL = '/media/'
-MEDIA_ROOT = [BASE_DIR / 'static/media']
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email settings - Configuración básica con Gmail (para desarrollo)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = 'amaurymperez22@gmail.com'        
-EMAIL_HOST_PASSWORD = 'errwqsqjrmebtkxi'        
-DEFAULT_FROM_EMAIL = 'amaurymonteagudop@gmail.com'
-EMAIL_TIMEOUT = 30
-
-
-
+EMAIL_HOST = config('EMAIL_HOST', default = '')
+EMAIL_PORT = config('EMAIL_PORT', default = 587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default = True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FORM_EMAIL', default='') 

@@ -5,7 +5,7 @@ from .models import Perfil
 
 class UserCustomForm(UserCreationForm):
     email = forms.EmailField(required=True)
-    numero = forms.CharField(max_length=15, required=True)
+    numero = forms.CharField(max_length=15, required=False)
 
     class Meta:
         model = User

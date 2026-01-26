@@ -7,7 +7,18 @@ class CategoriaAdmin(admin.ModelAdmin):
     list_display = ['nombre', 'color', 'created']
     search_fields = ['nombre']
     list_editable = ['color']
-
-admin.site.register(Ticket)
-admin.site.register(Comentario)
+    
+    
+class TicketAdmin(admin.ModelAdmin):
+    list_display = ['creador', 'asignado', 'titulo', 'estado'] 
+    search_fields = ['titulo']
+    
+    
+class ComentarioAdmin(admin.ModelAdmin):
+    list_display = ['creador', 'ticket'] 
+    search_fields = ['titulo']
+    
+    
+admin.site.register(Ticket, TicketAdmin)
+admin.site.register(Comentario, ComentarioAdmin)
 admin.site.register(Categoria, CategoriaAdmin)

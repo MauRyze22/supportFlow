@@ -66,10 +66,10 @@ class TicketListView(LoginRequiredMixin, generic.ListView):
         q = self.request.GET.get('q')
         
         if self.request.user.is_staff:
-            queryset = Ticket.objects.all()
+            queryset = Ticket.objects.all() 
         else:
             queryset = Ticket.objects.filter(Q(creador = self.request.user)|
-                                         Q(asignado = self.request.user))
+                                         Q(asignado = self.request.user)).distinct()
         
         # Filtros avanzados
         
@@ -108,7 +108,7 @@ class TicketListView(LoginRequiredMixin, generic.ListView):
             queryset = queryset.filter((Q(creador = self.request.user)|Q(asignado=self.request.user)) &
                                    (Q(estado__icontains = q)|
                                    Q(prioridad__icontains = q)|
-                                   Q(titulo__icontains = q)))
+                                   Q(titulo__icontains = q))).distinct()
             
         return queryset
     
@@ -141,7 +141,7 @@ class TicketCreateView(LoginRequiredMixin, generic.CreateView):
         if staff_emails:
             send_mail(
                 subject=f'Nuevo ticket #{ticket.pk}: {ticket.titulo}',
-                message=f"{self.request.user.username} creó un nuevo ticket.\n\n"
+                message=f"El usuario: {self.request.user.username} creó un nuevo ticket.\n\n"
                         f"Título: {ticket.titulo}\n"
                         f"Descripción: {ticket.descripcion[:300]}...\n"
                         f"Ver: http://localhost:8000{ticket.get_absolute_url()}",
@@ -193,43 +193,6 @@ class TicketUpdateView(LoginRequiredMixin, generic.UpdateView):
     def get_success_url(self):
         return reverse_lazy('ticket_list')
 
-    def form_valid(self, form):
-        ticket_viejo = self.get_object()
-        
-        ticket = form.save(commit=False)
-        ticket.save()
-        
-        if ticket_viejo.estado != ticket.estado:
-            
-            if ticket.creador.email:
-                send_mail(
-                    subject=f'Ticket #{ticket.pk}: {ticket.titulo}',
-                    message=f"Se ha actualizado el estado del ticket.\n\n"
-                            f"Título: {ticket.titulo}\n"
-                            f"Descripción: {ticket.descripcion[:300]}...\n"
-                            f"Ver: http://localhost:8000{ticket.get_absolute_url()}",
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=list(ticket.creador.email),
-                    fail_silently=False,
-            )     
-                
-        if ticket_viejo.asignado != ticket.asignado or ticket.asignado:
-            
-            if ticket.asignado.email:
-                send_mail(
-                    subject=f'Ticket #{ticket.pk}: {ticket.titulo}',
-                    message=f"Ha sido asignado a resolver este ticket.\n\n"
-                            f"Título: {ticket.titulo}\n"
-                            f"Descripción: {ticket.descripcion[:300]}...\n"
-                            f"Ver: http://localhost:8000{ticket.get_absolute_url()}",
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=list(ticket.asignado.email),
-                    fail_silently=False,
-            ) 
-                
-        messages.success(self.request, 'Ticket actualizado correctamente')        
-        return super().form_valid(form)
-    
     
 class TicketDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = Ticket

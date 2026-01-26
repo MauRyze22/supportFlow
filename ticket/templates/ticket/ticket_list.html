@@ -6,53 +6,129 @@
 {% block content %}
 
 <!-- Header -->
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
     <div>
-        <h1 class="text-3xl font-bold text-white mb-2">Tickets</h1>
-        <p class="text-slate-400">Gestiona y filtra todos los tickets del sistema</p>
+        <h1 class="text-2xl md:text-3xl font-bold text-white mb-1">Tickets</h1>
+        <p class="text-slate-400 text-sm">
+            {% if is_paginated %}
+            Mostrando {{ page_obj.start_index }}–{{ page_obj.end_index }} de {{ paginator.count }}
+            {% else %}
+            {{ tickets|length }} ticket{{ tickets|length|pluralize }}
+            {% endif %}
+        </p>
     </div>
-    <a href="{% url 'ticket_create' %}" 
-       class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all duration-200">
-        <i data-lucide="plus" class="w-5 h-5"></i>
-        <span>Nuevo Ticket</span>
-    </a>
+    <div class="flex gap-3 w-full md:w-auto">
+        <button onclick="toggleFilters()" class="md:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium transition-all border border-slate-700">
+            <i data-lucide="filter" class="w-5 h-5"></i>
+            <span>Filtros</span>
+        </button>
+        <a href="{% url 'ticket_create' %}" 
+           class="flex-1 md:flex-initial flex items-center justify-center gap-2 px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg transition-all">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>Nuevo</span>
+        </a>
+    </div>
 </div>
 
-<!-- Panel de Filtros -->
-<div class="rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden shadow-xl mb-8">
-    <div class="px-6 py-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/30">
-        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-            <i data-lucide="filter" class="w-5 h-5 text-violet-400"></i>
-            Filtros Avanzados
-        </h3>
-        <button onclick="toggleFilters()" 
-                class="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-700/30">
-            <i data-lucide="chevron-down" class="w-5 h-5"></i>
-        </button>
-    </div>
+<!-- Layout Principal: Sidebar + Content -->
+<div class="flex flex-col lg:flex-row gap-6">
+    
+    <!-- Sidebar de Filtros (Desktop: siempre visible, Mobile: toggle) -->
+    <aside id="filterSidebar" class="hidden lg:block lg:w-80 flex-shrink-0">
+        <div class="rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden shadow-xl sticky top-24">
+            
+            <!-- Header del Sidebar -->
+            <div class="px-5 py-4 border-b border-slate-700/50 bg-slate-800/30 flex items-center justify-between">
+                <h3 class="font-bold text-white flex items-center gap-2">
+                    <i data-lucide="sliders-horizontal" class="w-5 h-5 text-violet-400"></i>
+                    Filtros
+                </h3>
+                {% if request.GET %}
+                <button onclick="clearAllFilters()" class="text-xs text-red-400 hover:text-red-300 font-medium">
+                    Limpiar todo
+                </button>
+                {% endif %}
+            </div>
 
-    <div id="filterPanel" class="{% if not request.GET %}hidden{% endif %}">
-        <form method="GET" class="p-6 filter-form">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+            <!-- Formulario de Filtros -->
+            <form method="GET" class="p-5 space-y-4 filter-form">
                 
                 <!-- Búsqueda -->
-                <div class="lg:col-span-2">
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Búsqueda Rápida</label>
-                    <div class="relative">
-                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"></i>
-                        <input type="text" 
-                               name="q" 
-                               value="{{ request.GET.q }}"
-                               placeholder="Título, estado, prioridad..." 
-                               class="w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-200 mb-2">
+                        <i data-lucide="search" class="w-4 h-4 inline-block text-violet-400"></i>
+                        Búsqueda
+                    </label>
+                    <input type="text" 
+                           name="q" 
+                           value="{{ request.GET.q }}"
+                           placeholder="Buscar tickets..." 
+                           class="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all">
+                </div>
+
+                <!-- Estado -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-200 mb-2">
+                        <i data-lucide="flag" class="w-4 h-4 inline-block text-violet-400"></i>
+                        Estado
+                    </label>
+                    <div class="space-y-2">
+                        {% for valor, texto in estados %}
+                        <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-700/30 cursor-pointer transition-colors">
+                            <input type="radio" 
+                                   name="estado" 
+                                   value="{{ valor }}"
+                                   {% if request.GET.estado == valor %}checked{% endif %}
+                                   class="w-4 h-4 text-violet-600 bg-slate-900 border-slate-600 focus:ring-violet-500">
+                            <span class="text-sm text-slate-300">{{ texto }}</span>
+                        </label>
+                        {% endfor %}
+                        {% if request.GET.estado %}
+                        <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-700/30 cursor-pointer transition-colors">
+                            <input type="radio" name="estado" value="" class="w-4 h-4">
+                            <span class="text-sm text-slate-400 italic">Todos</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Prioridad -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-200 mb-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4 inline-block text-violet-400"></i>
+                        Prioridad
+                    </label>
+                    <div class="space-y-2">
+                        {% for valor, texto in prioridades %}
+                        <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-700/30 cursor-pointer transition-colors">
+                            <input type="radio" 
+                                   name="prioridad" 
+                                   value="{{ valor }}"
+                                   {% if request.GET.prioridad == valor %}checked{% endif %}
+                                   class="w-4 h-4 text-violet-600 bg-slate-900 border-slate-600 focus:ring-violet-500">
+                            <span class="flex items-center gap-2 text-sm text-slate-300">
+                                <span class="w-2 h-2 rounded-full {% if valor == 'critica' %}bg-red-400{% elif valor == 'alta' %}bg-orange-400{% elif valor == 'media' %}bg-yellow-400{% else %}bg-green-400{% endif %}"></span>
+                                {{ texto }}
+                            </span>
+                        </label>
+                        {% endfor %}
+                        {% if request.GET.prioridad %}
+                        <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-700/30 cursor-pointer transition-colors">
+                            <input type="radio" name="prioridad" value="" class="w-4 h-4">
+                            <span class="text-sm text-slate-400 italic">Todas</span>
+                        </label>
+                        {% endif %}
                     </div>
                 </div>
 
                 <!-- Categoría -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Categoría</label>
+                    <label class="block text-sm font-semibold text-slate-200 mb-2">
+                        <i data-lucide="tag" class="w-4 h-4 inline-block text-violet-400"></i>
+                        Categoría
+                    </label>
                     <select name="categoria" 
-                            class="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all">
+                            class="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all">
                         <option value="">Todas las categorías</option>
                         {% for cat in categorias %}
                         <option value="{{ cat.id }}" {% if request.GET.categoria == cat.id|stringformat:"s" %}selected{% endif %}>
@@ -62,345 +138,196 @@
                     </select>
                 </div>
 
-                <!-- Estado -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Estado</label>
-                    <select name="estado" 
-                            class="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all">
-                        <option value="">Todos los estados</option>
-                        {% for valor, texto in estados %}
-                        <option value="{{ valor }}" {% if request.GET.estado == valor %}selected{% endif %}>
-                            {{ texto }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                <!-- Fechas -->
+                <div class="border-t border-slate-700/50 pt-4">
+                    <label class="block text-sm font-semibold text-slate-200 mb-3">
+                        <i data-lucide="calendar" class="w-4 h-4 inline-block text-violet-400"></i>
+                        Rango de fechas
+                    </label>
+                    <div class="space-y-2">
+                        <input type="date" 
+                               name="fecha_desde"
+                               value="{{ fecha_desde_actual }}"
+                               class="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all">
+                        <input type="date" 
+                               name="fecha_hasta"
+                               value="{{ fecha_hasta_actual }}"
+                               class="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all">
+                    </div>
                 </div>
 
-                <!-- Prioridad -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Prioridad</label>
-                    <select name="prioridad" 
-                            class="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all">
-                        <option value="">Todas las prioridades</option>
-                        {% for valor, texto in prioridades %}
-                        <option value="{{ valor }}" {% if request.GET.prioridad == valor %}selected{% endif %}>
-                            {{ texto }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                <!-- Botones -->
+                <div class="pt-4 space-y-2">
+                    <button type="submit" 
+                            class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium transition-all shadow-lg">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                        <span>Aplicar Filtros</span>
+                    </button>
+                    <a href="{% url 'ticket_list' %}" 
+                       class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-all">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                        <span>Limpiar</span>
+                    </a>
                 </div>
-
-                <!-- Fecha Desde -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Desde</label>
-                    <input type="date" 
-                           name="fecha_desde"
-                           value="{{ fecha_desde_actual }}"
-                           class="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all">
-                </div>
-
-                <!-- Fecha Hasta -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Hasta</label>
-                    <input type="date" 
-                           name="fecha_hasta"
-                           value="{{ fecha_hasta_actual }}"
-                           class="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all">
-                </div>
-            </div>
+            </form>
 
             <!-- Filtros Activos -->
             {% if request.GET %}
-            <div class="flex flex-wrap gap-2 mb-4 pb-4 border-b border-slate-700/50">
-                <span class="text-sm text-slate-400">Filtros activos:</span>
-                {% if request.GET.q %}
-                <span class="inline-flex items-center gap-2 px-3 py-1 bg-violet-500/20 border border-violet-500/30 text-violet-300 rounded-full text-sm">
-                    <span>Búsqueda: "{{ request.GET.q }}"</span>
-                    <button type="button" onclick="clearFilter('q')" class="hover:text-violet-200">
-                        <i data-lucide="x" class="w-3 h-3"></i>
-                    </button>
-                </span>
-                {% endif %}
-                {% if request.GET.categoria %}
-                <span class="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 rounded-full text-sm">
-                    <span>Categoría</span>
-                    <button type="button" onclick="clearFilter('categoria')" class="hover:text-cyan-200">
-                        <i data-lucide="x" class="w-3 h-3"></i>
-                    </button>
-                </span>
-                {% endif %}
-                {% if request.GET.estado %}
-                <span class="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-full text-sm">
-                    <span>Estado</span>
-                    <button type="button" onclick="clearFilter('estado')" class="hover:text-blue-200">
-                        <i data-lucide="x" class="w-3 h-3"></i>
-                    </button>
-                </span>
-                {% endif %}
-                {% if request.GET.prioridad %}
-                <span class="inline-flex items-center gap-2 px-3 py-1 bg-orange-500/20 border border-orange-500/30 text-orange-300 rounded-full text-sm">
-                    <span>Prioridad</span>
-                    <button type="button" onclick="clearFilter('prioridad')" class="hover:text-orange-200">
-                        <i data-lucide="x" class="w-3 h-3"></i>
-                    </button>
-                </span>
-                {% endif %}
-                <button type="button" 
-                        onclick="clearAllFilters()" 
-                        class="inline-flex items-center gap-1 px-3 py-1 text-red-400 hover:text-red-300 text-sm hover:bg-red-500/10 rounded-full transition-colors">
-                    <i data-lucide="x-circle" class="w-3 h-3"></i>
-                    <span>Limpiar todos</span>
-                </button>
+            <div class="px-5 pb-4">
+                <p class="text-xs font-semibold text-slate-400 mb-2">FILTROS ACTIVOS:</p>
+                <div class="flex flex-wrap gap-2">
+                    {% if request.GET.q %}
+                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-violet-500/20 border border-violet-500/30 text-violet-300 rounded-md text-xs">
+                        "{{ request.GET.q }}"
+                        <button type="button" onclick="clearFilter('q')" class="hover:text-violet-200">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </span>
+                    {% endif %}
+                    {% if request.GET.estado %}
+                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 rounded-md text-xs">
+                        Estado
+                        <button type="button" onclick="clearFilter('estado')">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </span>
+                    {% endif %}
+                    {% if request.GET.prioridad %}
+                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-orange-500/20 border border-orange-500/30 text-orange-300 rounded-md text-xs">
+                        Prioridad
+                        <button type="button" onclick="clearFilter('prioridad')">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </span>
+                    {% endif %}
+                </div>
             </div>
             {% endif %}
 
-            <!-- Botones -->
-            <div class="flex gap-3">
-                <button type="submit" 
-                        class="flex items-center gap-2 px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium transition-colors">
-                    <i data-lucide="search" class="w-4 h-4"></i>
-                    <span>Aplicar Filtros</span>
-                </button>
-                <a href="{% url 'ticket_list' %}" 
-                   class="flex items-center gap-2 px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                    <span>Limpiar</span>
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
+        </div>
+    </aside>
 
-<!-- Resultados -->
-{% if tickets %}
+    <!-- Contenido Principal: Lista de Tickets -->
+    <main class="flex-1 min-w-0">
+        {% if tickets %}
+        
+        <!-- Grid de Tickets Cards -->
+        <div class="grid grid-cols-1 gap-4">
+            {% for ticket in tickets %}
+            <a href="{% url 'ticket_detail' ticket.id %}" 
+               class="block rounded-xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 p-4 hover:border-violet-500/50 hover:shadow-lg hover:shadow-violet-500/10 transition-all group">
+                
+                <div class="flex items-start gap-4">
+                    <!-- Indicador de prioridad -->
+                    <div class="flex-shrink-0 w-1 h-full rounded-full {% if ticket.prioridad == 'critica' %}bg-red-500{% elif ticket.prioridad == 'alta' %}bg-orange-500{% elif ticket.prioridad == 'media' %}bg-yellow-500{% else %}bg-green-500{% endif %}"></div>
+                    
+                    <div class="flex-1 min-w-0">
+                        <!-- Header -->
+                        <div class="flex items-start justify-between gap-3 mb-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-violet-400 font-mono text-sm font-semibold">#{{ ticket.id }}</span>
+                                <span class="px-2 py-1 rounded text-xs font-bold {% if ticket.prioridad == 'critica' %}bg-red-500/20 text-red-300{% elif ticket.prioridad == 'alta' %}bg-orange-500/20 text-orange-300{% elif ticket.prioridad == 'media' %}bg-yellow-500/20 text-yellow-300{% else %}bg-green-500/20 text-green-300{% endif %}">
+                                    {{ ticket.get_prioridad_display }}
+                                </span>
+                                <span class="px-2 py-1 rounded text-xs font-bold {% if ticket.estado == 'nuevo' %}bg-blue-500/20 text-blue-300{% elif ticket.estado == 'abierto' %}bg-cyan-500/20 text-cyan-300{% elif ticket.estado == 'en_progreso' %}bg-amber-500/20 text-amber-300{% else %}bg-slate-500/20 text-slate-300{% endif %}">
+                                    {{ ticket.get_estado_display }}
+                                </span>
+                                {% if ticket.categoria %}
+                                <span class="px-2 py-1 rounded text-xs font-medium" style="background-color: {{ ticket.categoria.color }}20; color: {{ ticket.categoria.color }};">
+                                    {{ ticket.categoria.nombre }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <span class="text-slate-500 text-xs whitespace-nowrap">{{ ticket.created|timesince }}</span>
+                        </div>
 
-<!-- Info de Resultados -->
-<div class="flex justify-between items-center mb-4">
-    <div class="text-slate-400 text-sm">
-        {% if is_paginated %}
-        Mostrando <span class="text-white font-medium">{{ page_obj.start_index }}–{{ page_obj.end_index }}</span> de <span class="text-white font-medium">{{ paginator.count }}</span> tickets
-        {% else %}
-        <span class="text-white font-medium">{{ tickets|length }}</span> ticket{{ tickets|length|pluralize }}
-        {% endif %}
-    </div>
-</div>
+                        <!-- Título -->
+                        <h3 class="text-white font-semibold text-base mb-2 group-hover:text-violet-400 transition-colors line-clamp-1">
+                            {{ ticket.titulo }}
+                        </h3>
 
-<!-- Tabla / Cards Responsive -->
-<div class="rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden shadow-xl">
-    
-    <!-- Vista Desktop: Tabla -->
-    <div class="hidden lg:block overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-slate-800/50 border-b border-slate-700/50">
-                <tr>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">#</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Ticket</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Estado</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Prioridad</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Categoría</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Fecha</th>
-                    <th class="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-700/50">
-                {% for ticket in tickets %}
-                <tr class="hover:bg-slate-700/30 transition-colors group">
-                    <td class="px-6 py-4">
-                        <span class="text-violet-400 font-mono font-semibold">#{{ ticket.id }}</span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex flex-col">
-                            <a href="{% url 'ticket_detail' ticket.id %}" 
-                               class="text-white font-medium hover:text-violet-400 transition-colors mb-1 line-clamp-1">
-                                {{ ticket.titulo }}
-                            </a>
-                            <div class="flex items-center gap-2 text-sm text-slate-400">
+                        <!-- Descripción -->
+                        <p class="text-slate-400 text-sm mb-3 line-clamp-2">{{ ticket.descripcion|truncatewords:20 }}</p>
+
+                        <!-- Footer -->
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center gap-3 text-slate-500">
                                 <span class="flex items-center gap-1">
-                                    <i data-lucide="user" class="w-3 h-3"></i>
+                                    <i data-lucide="user" class="w-4 h-4"></i>
                                     {{ ticket.creador.username }}
                                 </span>
                                 {% if ticket.asignado %}
-                                <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                                <span>{{ ticket.asignado.username }}</span>
+                                <span class="flex items-center gap-1">
+                                    <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                                    {{ ticket.asignado.username }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="flex items-center gap-1 text-slate-500">
+                                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                    {{ ticket.comentarios.count }}
+                                </span>
+                                {% if ticket.creador == request.user or request.user.is_staff %}
+                                <button onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{% url 'ticket_update' ticket.id %}'" 
+                                        class="p-1.5 text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 rounded transition-all opacity-0 group-hover:opacity-100">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
                                 {% endif %}
                             </div>
                         </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold
-                                   {% if ticket.estado == 'nuevo' %}bg-blue-500/20 text-blue-300 border border-blue-500/30
-                                   {% elif ticket.estado == 'abierto' %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/30
-                                   {% elif ticket.estado == 'en_progreso' %}bg-amber-500/20 text-amber-300 border border-amber-500/30
-                                   {% elif ticket.estado == 'cerrado' %}bg-slate-500/20 text-slate-300 border border-slate-500/30
-                                   {% else %}bg-slate-500/20 text-slate-300 border border-slate-500/30{% endif %}">
-                            {{ ticket.get_estado_display }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold
-                                   {% if ticket.prioridad == 'critica' %}bg-red-500/20 text-red-300 border border-red-500/30
-                                   {% elif ticket.prioridad == 'alta' %}bg-orange-500/20 text-orange-300 border border-orange-500/30
-                                   {% elif ticket.prioridad == 'media' %}bg-yellow-500/20 text-yellow-300 border border-yellow-500/30
-                                   {% else %}bg-green-500/20 text-green-300 border border-green-500/30{% endif %}">
-                            {{ ticket.get_prioridad_display }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        {% if ticket.categoria %}
-                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium border" 
-                              style="background-color: {{ ticket.categoria.color }}20; color: {{ ticket.categoria.color }}; border-color: {{ ticket.categoria.color }}50;">
-                            {{ ticket.categoria.nombre }}
-                        </span>
-                        {% else %}
-                        <span class="text-slate-500 text-sm">—</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-6 py-4 text-slate-400 text-sm">
-                        {{ ticket.created|timesince }} atrás
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <a href="{% url 'ticket_detail' ticket.id %}" 
-                               class="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-all"
-                               data-tooltip="Ver detalle">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                            </a>
-                            {% if ticket.creador == request.user or request.user.is_staff %}
-                            <a href="{% url 'ticket_update' ticket.id %}" 
-                               class="p-2 text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-all"
-                               data-tooltip="Editar">
-                                <i data-lucide="edit-2" class="w-4 h-4"></i>
-                            </a>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Vista Mobile: Cards -->
-    <div class="lg:hidden divide-y divide-slate-700/50">
-        {% for ticket in tickets %}
-        <div class="p-4 hover:bg-slate-700/30 transition-colors">
-            <div class="flex items-start justify-between mb-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-violet-400 font-mono text-sm font-semibold">#{{ ticket.id }}</span>
-                    <span class="inline-flex px-2 py-1 rounded text-xs font-bold
-                               {% if ticket.prioridad == 'critica' %}bg-red-500/20 text-red-300
-                               {% elif ticket.prioridad == 'alta' %}bg-orange-500/20 text-orange-300
-                               {% elif ticket.prioridad == 'media' %}bg-yellow-500/20 text-yellow-300
-                               {% else %}bg-green-500/20 text-green-300{% endif %}">
-                        {{ ticket.get_prioridad_display }}
-                    </span>
+                    </div>
                 </div>
-                <span class="text-slate-500 text-xs">{{ ticket.created|timesince }}</span>
-            </div>
-            
-            <a href="{% url 'ticket_detail' ticket.id %}" class="block mb-3">
-                <h4 class="text-white font-semibold mb-1">{{ ticket.titulo }}</h4>
             </a>
-            
-            <div class="flex flex-wrap items-center gap-2 mb-3">
-                <span class="inline-flex px-2 py-1 rounded text-xs font-bold
-                           {% if ticket.estado == 'nuevo' %}bg-blue-500/20 text-blue-300
-                           {% elif ticket.estado == 'abierto' %}bg-cyan-500/20 text-cyan-300
-                           {% elif ticket.estado == 'en_progreso' %}bg-amber-500/20 text-amber-300
-                           {% else %}bg-slate-500/20 text-slate-300{% endif %}">
-                    {{ ticket.get_estado_display }}
-                </span>
-                {% if ticket.categoria %}
-                <span class="inline-flex px-2 py-1 rounded text-xs" 
-                      style="background-color: {{ ticket.categoria.color }}20; color: {{ ticket.categoria.color }};">
-                    {{ ticket.categoria.nombre }}
-                </span>
-                {% endif %}
-            </div>
-            
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-1 text-slate-400 text-sm">
-                    <i data-lucide="user" class="w-3 h-3"></i>
-                    <span>{{ ticket.creador.username }}</span>
-                    {% if ticket.asignado %}
-                    <i data-lucide="arrow-right" class="w-3 h-3 mx-1"></i>
-                    <span>{{ ticket.asignado.username }}</span>
-                    {% endif %}
-                </div>
-                <div class="flex gap-2">
-                    <a href="{% url 'ticket_detail' ticket.id %}" 
-                       class="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg">
-                        <i data-lucide="eye" class="w-4 h-4"></i>
-                    </a>
-                    {% if ticket.creador == request.user or request.user.is_staff %}
-                    <a href="{% url 'ticket_update' ticket.id %}" 
-                       class="p-2 text-violet-400 hover:bg-violet-500/10 rounded-lg">
-                        <i data-lucide="edit-2" class="w-4 h-4"></i>
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-</div>
 
-<!-- Paginación -->
-{% if is_paginated %}
-<div class="flex justify-center mt-8">
-    <nav class="flex items-center gap-2">
-        {% if page_obj.has_previous %}
-        <a href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" 
-           class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-lg transition-colors">
-            <i data-lucide="chevrons-left" class="w-4 h-4"></i>
-        </a>
-        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" 
-           class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-lg transition-colors">
-            Anterior
-        </a>
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <div class="flex justify-center mt-6">
+            <nav class="flex items-center gap-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" 
+                   class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-lg transition-all">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </a>
+                {% endif %}
+
+                <span class="px-4 py-2 bg-violet-600 text-white rounded-lg font-medium">
+                    {{ page_obj.number }} / {{ paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" 
+                   class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-lg transition-all">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
         {% endif %}
 
-        <span class="px-4 py-2 bg-violet-600 text-white rounded-lg font-medium">
-            {{ page_obj.number }} / {{ paginator.num_pages }}
-        </span>
-
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" 
-           class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-lg transition-colors">
-            Siguiente
-        </a>
-        <a href="?page={{ paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" 
-           class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-lg transition-colors">
-            <i data-lucide="chevrons-right" class="w-4 h-4"></i>
-        </a>
-        {% endif %}
-    </nav>
-</div>
-{% endif %}
-
-{% else %}
-
-<!-- Estado Vacío -->
-<div class="text-center py-16">
-    <div class="inline-flex items-center justify-center w-24 h-24 bg-slate-800 rounded-full mb-6">
-        <i data-lucide="inbox" class="w-12 h-12 text-slate-600"></i>
-    </div>
-    <h3 class="text-2xl font-bold text-white mb-2">No se encontraron tickets</h3>
-    <p class="text-slate-400 mb-6">
-        {% if request.GET %}
-        Prueba con otros criterios de búsqueda o filtros
         {% else %}
-        Aún no hay tickets en el sistema
-        {% endif %}
-    </p>
-    <a href="{% url 'ticket_create' %}" 
-       class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all">
-        <i data-lucide="plus" class="w-5 h-5"></i>
-        <span>Crear nuevo ticket</span>
-    </a>
-</div>
 
-{% endif %}
+        <!-- Estado Vacío -->
+        <div class="text-center py-16 rounded-2xl bg-slate-800/50 border border-slate-700/50">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-slate-900/50 rounded-full mb-4">
+                <i data-lucide="inbox" class="w-10 h-10 text-slate-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">No se encontraron tickets</h3>
+            <p class="text-slate-400 mb-6">
+                {% if request.GET %}Intenta con otros filtros{% else %}Crea tu primer ticket{% endif %}
+            </p>
+            <a href="{% url 'ticket_create' %}" 
+               class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-medium shadow-lg transition-all">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                <span>Crear Ticket</span>
+            </a>
+        </div>
+
+        {% endif %}
+    </main>
+</div>
 
 {% endblock %}
 
@@ -408,5 +335,11 @@
 <script src="{% static 'js/filters.js' %}"></script>
 <script>
 lucide.createIcons();
+
+// Toggle filtros en móvil
+function toggleFilters() {
+    const sidebar = document.getElementById('filterSidebar');
+    sidebar.classList.toggle('hidden');
+}
 </script>
 {% endblock %}

@@ -23,8 +23,6 @@ class CustomLoginView(LoginView):
         context['page'] = 'login'
         return context
     
-    
-
         
 class CustomRegisterView(generic.CreateView):
     model = User
@@ -45,7 +43,6 @@ class CustomRegisterView(generic.CreateView):
     
     
 class CustomLogoutView(LogoutView):
-    
     def get_success_url(self):
         return reverse_lazy('login_user')
     
@@ -71,8 +68,7 @@ class PerfilUpdateView(LoginRequiredMixin, generic.UpdateView):
         return reverse_lazy('perfil_detail', kwargs = {'pk':self.kwargs['pk']})
     
     def get_queryset(self):
-        perfil = get_object_or_404(Perfil, pk = self.kwargs['pk'])
-        if self.request.user.is_staff or perfil.usuario != self.request.user:
-            return Perfil.objects.all()
-        raise ValueError  
+        if self.request.user.is_staff:
+            return Perfil.o-bjects.all()
+        return Perfil.objects.filter(usuario = self.request.user)
     

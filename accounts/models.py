@@ -24,10 +24,10 @@ class Perfil(models.Model):
     @receiver(post_save, sender=User)
     def crear_perfil(sender, instance, created, **kwargs):
         if created:
-            Perfil.objects.create(usuario = instance)
+            Perfil.objects.create(usuario = instance, email = instance.email)
             
             
-    @receiver(post_save, sender = User)        
+    @receiver(post_save, sender=User)        
     def guardar_perfil(sender, instance, **kwargs):
         if hasattr(instance, 'perfil'):
             instance.perfil.save()
