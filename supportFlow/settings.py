@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
+# settings.py
 from decouple import config, Csv
 import dj_database_url
 
@@ -18,6 +19,7 @@ import dj_database_url
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+<<<<<<< HEAD
 <<<<<<< HEAD
 DEBUG = config('DEBUG', default=False, cast=bool)
 
@@ -50,20 +52,34 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
 =======
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+=======
+>>>>>>> bba544b0596ccf3be3bb8d4c39af80adb011bddc
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-# CSRF y seguridad para Railway
+# Allowed hosts
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
+
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
+# En producción, agrega el dominio de Railway
 if not DEBUG:
-    # Solo en producción
-    CSRF_TRUSTED_ORIGINS = config(
-        'CSRF_TRUSTED_ORIGINS',
-        default='https://web-production-ee2b0.up.railway.app',
-        cast=Csv()
-    )
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    railway_domain = config('RAILWAY_PUBLIC_DOMAIN', default='')
+    if railway_domain:
+        CSRF_TRUSTED_ORIGINS.append(f'https://{railway_domain}')
+    
+    # O especifica manualmente:
+    CSRF_TRUSTED_ORIGINS.append('https://web-production-ee2b0.up.railway.app')
+
+# Security settings
+if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+<<<<<<< HEAD
 else:
     # Desarrollo
     CSRF_TRUSTED_ORIGINS = []
@@ -71,6 +87,12 @@ else:
     SESSION_COOKIE_SECURE = False
 
 
+=======
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+>>>>>>> bba544b0596ccf3be3bb8d4c39af80adb011bddc
 # Application definition
 
 INSTALLED_APPS = [
