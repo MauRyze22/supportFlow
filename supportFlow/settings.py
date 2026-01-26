@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
-from decouple import config
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +26,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default = False, cast = bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOST', default = '').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOST', default = 'localhost,127.0.0.1', cast=Csv())
 
 
 # Application definition
@@ -80,11 +80,11 @@ WSGI_APPLICATION = 'supportFlow.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': config('DB_NAME', default = ''),
-        'USER': config('DB_USER', default = ''),
-        'PASSWORD': config('DB_PASSWORD', default = ''),
-        'HOST': config('DB_HOST', default = ''),
-        'PORT': config('DB_PORT', default = ''),
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
         
     }
 }
