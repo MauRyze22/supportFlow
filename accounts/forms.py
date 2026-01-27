@@ -28,4 +28,11 @@ class PerfilForm(forms.ModelForm):
             'foto': forms.FileInput(),
             'biografia': forms.Textarea(attrs={'rows':4})    
         }
-        
+    
+    def save(self, commit=True):
+        perfil = super().save(commit=False)
+        perfil.usuario.email = self.cleaned_data['email']
+        if commit:
+            perfil.save()
+            perfil.usuario.save()
+        return perfil

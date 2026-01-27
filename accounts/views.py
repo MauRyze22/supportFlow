@@ -69,6 +69,6 @@ class PerfilUpdateView(LoginRequiredMixin, generic.UpdateView):
     
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Perfil.o-bjects.all()
+            return Perfil.objects.all()
         return Perfil.objects.filter(usuario = self.request.user)
     
