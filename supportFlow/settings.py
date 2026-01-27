@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
-# settings.py
 from decouple import config, Csv
 import dj_database_url
 
@@ -99,7 +98,7 @@ WSGI_APPLICATION = 'supportFlow.wsgi.application'
 
 import dj_database_url
 
-if 'DATABASE_URL' in os.environ:
+if 'DATABASES_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(default=config('DATABASE_URL'))
         
