@@ -98,7 +98,7 @@ WSGI_APPLICATION = 'supportFlow.wsgi.application'
 
 import dj_database_url
 
-if 'DATABASES_URL' in os.environ:
+if 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(default=config('DATABASE_URL'))
         
