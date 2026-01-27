@@ -124,8 +124,7 @@ class TicketListView(LoginRequiredMixin, generic.ListView):
         
         return context
         
-
-    
+        
 class TicketCreateView(LoginRequiredMixin, generic.CreateView):
     model = Ticket
     template_name = 'ticket/ticket_form.html'
