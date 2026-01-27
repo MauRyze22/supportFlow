@@ -27,8 +27,9 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
 # CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
+    'https://supportflow-production.up.railway.app/',          # tu dominio exacto
+    'https://*.railway.app',                                   # wildcard para cubrir todos los subdominios .up.railway.app
+    'https://supportflow-production.up.railway.app/',
 ]
 
 # En producción, agrega el dominio de Railway
@@ -43,8 +44,8 @@ if not DEBUG:
 # Security settings
 if not DEBUG:
     SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SAMESITE = 'Lax'
     SECURE_BROWSER_XSS_FILTER = True
