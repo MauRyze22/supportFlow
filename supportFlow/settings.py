@@ -105,16 +105,11 @@ if 'DATABASES_URL' in os.environ:
     }
 else:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST'),
-            'PORT': config('DB_PORT'),
-            
-        }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -168,4 +163,4 @@ EMAIL_PORT = config('EMAIL_PORT', default = 587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default = True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FORM_EMAIL', default='') 
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='') 
