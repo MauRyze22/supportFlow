@@ -13,7 +13,7 @@
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="screenshots/dashboard.png" alt="Dashboard" width="49%">
+  <img src="screenshots/Dashboard.png" alt="Dashboard" width="49%">
   <img src="screenshots/Tickets_List.png" alt="Lista de Tickets" width="49%">
 </p>
 <p align="center">
