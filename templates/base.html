@@ -278,6 +278,17 @@
 
     <!-- Custom Scripts -->
     <script src="{% static 'js/main.js' %}"></script>
-    {% block extra_js %}{% endblock %}
+    {% block extra_js %}
+<script src="{% static 'js/filters.js' %}?v={{ request.META.SCRIPT_NAME|default:'1' }}"></script>
+<script>
+lucide.createIcons();
+
+// Toggle filtros en móvil
+function toggleFilters() {
+    const sidebar = document.getElementById('filterSidebar');
+    sidebar.classList.toggle('hidden');
+}
+</script>
+{% endblock %}
 </body>
 </html>
