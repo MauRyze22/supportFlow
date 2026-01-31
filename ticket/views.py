@@ -58,6 +58,7 @@ class TicketListView(LoginRequiredMixin, generic.ListView):
     model = Ticket
     template_name = 'ticket/ticket_list.html'
     context_object_name = 'tickets'
+    login_url = '/accounts/login-user/'
     paginate_by = 10
     
     def get_queryset(self):
@@ -255,6 +256,7 @@ class CategoriaListView(LoginRequiredMixin, generic.ListView):
     model = Categoria
     template_name = 'ticket/categoria_list.html'
     context_object_name = 'categorias'
+    login_url = '/accounts/login-user/'
     queryset = Categoria.objects.all()
     
     

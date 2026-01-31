@@ -32,13 +32,11 @@ CSRF_TRUSTED_ORIGINS = [
     'https://supportflow-production.up.railway.app/',
 ]
 
-# En producción, agrega el dominio de Railway
 if not DEBUG:
     railway_domain = config('RAILWAY_PUBLIC_DOMAIN', default='')
     if railway_domain:
         CSRF_TRUSTED_ORIGINS.append(f'https://{railway_domain}')
     
-    # O especifica manualmente:
     CSRF_TRUSTED_ORIGINS.append('https://web-production-ee2b0.up.railway.app')
 
 # Security settings
