@@ -40,8 +40,6 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
                             📝 Descripción: {instance.descripcion[:200]}...
                             👤 Creado por: {instance.creador.username}
                             ⚡ Prioridad: {instance.get_prioridad_display()}
-                                Ver ticket: http://localhost:8000{instance.get_absolute_url()}
-                                ---
                                 SupportFlow - Sistema de Tickets """,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=list(staff_emails),
@@ -67,9 +65,6 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
                             🎯 Título: {instance.titulo}
                             🔄 Estado anterior: {estado_anterior.upper()}
                             🔄 Estado nuevo: {instance.estado.upper()}
-
-                            Ver ticket: http://localhost:8000{instance.get_absolute_url()}
-
                             ---
                             SupportFlow - Sistema de Tickets
                             """,
@@ -93,9 +88,6 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
                                 👤 Creado por: {instance.creador.username}
                                 ⚡ Prioridad: {instance.get_prioridad_display()}
                                 🏷️  Estado: {instance.get_estado_display()}
-
-                                Ver ticket: http://localhost:8000{instance.get_absolute_url()}
-
                                 ---
                                 SupportFlow - Sistema de Tickets
                                                         """,
