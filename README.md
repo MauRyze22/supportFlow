@@ -83,7 +83,7 @@ Los equipos de soporte necesitan un sistema simple para gestionar tickets sin pa
 
 ```bash
 # Clonar repositorio
-git clone https://github.com/TuUsuario/SupportFlow.git
+git clone https://github.com/MauRyze22/SupportFlow.git
 cd SupportFlow
 
 # Crear entorno virtual
