@@ -26,11 +26,8 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
 # CSRF Trusted Origins
-CSRF_TRUSTED_ORIGINS = [
-    'https://supportflow-production.up.railway.app/',          # tu dominio exacto
-    'https://*.railway.app',                                   # wildcard para cubrir todos los subdominios .up.railway.app
-    'https://supportflow-production.up.railway.app/',
-]
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())
 
 if not DEBUG:
     railway_domain = config('RAILWAY_PUBLIC_DOMAIN', default='')
@@ -62,8 +59,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
