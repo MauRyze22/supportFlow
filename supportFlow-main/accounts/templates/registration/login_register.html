@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if page == 'login' %}Iniciar Sesión{% else %}Registrarse{% endif %} - SupportFlow
+{% endblock %}
+
+{% block content %}
+
+<div class="min-h-[calc(100vh-200px)] flex items-center justify-center py-12">
+    <div class="w-full max-w-md">
+        
+        <!-- Logo y Título -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-600 shadow-2xl shadow-violet-500/50 mb-4">
+                <i data-lucide="ticket" class="w-8 h-8 text-white"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-white mb-2">
+                {% if page == 'login' %}Iniciar Sesión{% else %}Crear Cuenta{% endif %}
+            </h1>
+            <p class="text-slate-400">
+                {% if page == 'login' %}
+                    Accede a tu cuenta de SupportFlow
+                {% else %}
+                    Únete a SupportFlow y gestiona tus tickets
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Card del Formulario -->
+        <div class="rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 shadow-2xl overflow-hidden">
+            <div class="p-8">
+                <form method="POST" class="space-y-5">
+                    {% csrf_token %}
+
+                    {% if page == 'login' %}
+                        <!-- LOGIN FORM -->
+                        
+                        <!-- Username -->
+                        <div class="space-y-2">
+                            <label for="id_username" class="block text-sm font-semibold text-slate-200">
+                                <i data-lucide="user" class="w-4 h-4 inline-block mr-1 text-violet-400"></i>
+                                Usuario
+                            </label>
+                            <input 
+                                type="text" 
+                                name="username" 
+                                id="id_username"
+                                required
+                                autocomplete="username"
+                                class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                                placeholder="Tu nombre de usuario"
+                            >
+                        </div>
+
+                        <!-- Password -->
+                        <div class="space-y-2">
+                            <label for="id_password" class="block text-sm font-semibold text-slate-200">
+                                <i data-lucide="lock" class="w-4 h-4 inline-block mr-1 text-violet-400"></i>
+                                Contraseña
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="password" 
+                                    name="password" 
+                                    id="id_password"
+                                    required
+                                    autocomplete="current-password"
+                                    class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                                    placeholder="Tu contraseña"
+                                >
+                                <button type="button" 
+                                        onclick="togglePassword('id_password')"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    {% else %}
+                        <!-- REGISTER FORM -->
+                        
+                        <!-- Username -->
+                        <div class="space-y-2">
+                            <label for="id_username" class="block text-sm font-semibold text-slate-200">
+                                <i data-lucide="user" class="w-4 h-4 inline-block mr-1 text-violet-400"></i>
+                                Usuario <span class="text-red-400">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                name="username" 
+                                id="id_username"
+                                required
+                                autocomplete="username"
+                                maxlength="150"
+                                class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                                placeholder="Elige un nombre de usuario"
+                            >
+                            <p class="text-xs text-slate-500">
+                                <i data-lucide="info" class="w-3 h-3 inline-block"></i>
+                                Máx. 150 caracteres. Letras, dígitos y @/./+/-/_ solamente.
+                            </p>
+                        </div>
+
+                        <!-- Email (si existe en tu form) -->
+                        {% if form.email %}
+                        <div class="space-y-2">
+                            <label for="id_email" class="block text-sm font-semibold text-slate-200">
+                                <i data-lucide="mail" class="w-4 h-4 inline-block mr-1 text-violet-400"></i>
+                                Email
+                            </label>
+                            <input 
+                                type="email" 
+                                name="email" 
+                                id="id_email"
+                                autocomplete="email"
+                                class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                                placeholder="tu@email.com"
+                            >
+                        </div>
+                        {% endif %}
+
+                        <!-- Password 1 -->
+                        <div class="space-y-2">
+                            <label for="id_password1" class="block text-sm font-semibold text-slate-200">
+                                <i data-lucide="lock" class="w-4 h-4 inline-block mr-1 text-violet-400"></i>
+                                Contraseña <span class="text-red-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="password" 
+                                    name="password1" 
+                                    id="id_password1"
+                                    required
+                                    autocomplete="new-password"
+                                    class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all pr-12"
+                                    placeholder="Crea una contraseña segura"
+                                >
+                                <button type="button" 
+                                        onclick="togglePassword('id_password1')"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-1 text-xs text-slate-500">
+                                <p><i data-lucide="check-circle" class="w-3 h-3 inline-block text-emerald-400"></i> Tu contraseña no puede ser muy similar a tu otra información personal.</p>
+                                <p><i data-lucide="check-circle" class="w-3 h-3 inline-block text-emerald-400"></i> Debe contener al menos 8 caracteres.</p>
+                                <p><i data-lucide="check-circle" class="w-3 h-3 inline-block text-emerald-400"></i> No puede ser una contraseña comúnmente utilizada.</p>
+                                <p><i data-lucide="check-circle" class="w-3 h-3 inline-block text-emerald-400"></i> No puede ser completamente numérica.</p>
+                            </div>
+                        </div>
+
+                        <!-- Password 2 -->
+                        <div class="space-y-2">
+                            <label for="id_password2" class="block text-sm font-semibold text-slate-200">
+                                <i data-lucide="shield-check" class="w-4 h-4 inline-block mr-1 text-violet-400"></i>
+                                Confirmar Contraseña <span class="text-red-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="password" 
+                                    name="password2" 
+                                    id="id_password2"
+                                    required
+                                    autocomplete="new-password"
+                                    class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all pr-12"
+                                    placeholder="Repite tu contraseña"
+                                >
+                                <button type="button" 
+                                        onclick="togglePassword('id_password2')"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                <i data-lucide="info" class="w-3 h-3 inline-block"></i>
+                                Ingresa la misma contraseña para verificación.
+                            </p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Errores del formulario -->
+                    {% if form.errors %}
+                    <div class="rounded-lg bg-red-500/10 border border-red-500/30 p-4">
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="alert-circle" class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"></i>
+                            <div class="flex-1">
+                                <p class="text-red-300 font-semibold mb-2">Por favor corrige los siguientes errores:</p>
+                                <ul class="space-y-1 text-sm text-red-200">
+                                    {% for field in form %}
+                                        {% for error in field.errors %}
+                                            <li>• {{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {% for error in form.non_field_errors %}
+                                        <li>• {{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Submit Button -->
+                    <button type="submit" 
+                            class="w-full py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-lg font-semibold shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all duration-200 flex items-center justify-center gap-2">
+                        {% if page == 'login' %}
+                            <i data-lucide="log-in" class="w-5 h-5"></i>
+                            <span>Iniciar Sesión</span>
+                        {% else %}
+                            <i data-lucide="user-plus" class="w-5 h-5"></i>
+                            <span>Crear Cuenta</span>
+                        {% endif %}
+                    </button>
+
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-8 py-4 bg-slate-800/30 border-t border-slate-700/50 text-center">
+                {% if page == 'login' %}
+                    <p class="text-slate-400 text-sm">
+                        ¿No tienes cuenta? 
+                        <a href="{% url 'register_user' %}" class="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
+                            Regístrate aquí
+                        </a>
+                    </p>
+                {% else %}
+                    <p class="text-slate-400 text-sm">
+                        ¿Ya tienes cuenta? 
+                        <a href="{% url 'login_user' %}" class="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
+                            Inicia sesión
+                        </a>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Info adicional -->
+        {% if page != 'login' %}
+        <div class="mt-6 text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/30 border border-slate-700/50 rounded-lg text-slate-400 text-xs">
+                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+                <span>Tu información está protegida y segura</span>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+lucide.createIcons();
+
+// Toggle password visibility
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = event.currentTarget.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+    } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+    }
+    
+    lucide.createIcons();
+}
+
+// Password strength indicator (opcional)
+const password1 = document.getElementById('id_password1');
+if (password1) {
+    password1.addEventListener('input', function() {
+        const value = this.value;
+        const checks = [
+            value.length >= 8,
+            /[a-z]/.test(value),
+            /[A-Z]/.test(value),
+            /[0-9]/.test(value),
+            /[^a-zA-Z0-9]/.test(value)
+        ];
+        
+        const strength = checks.filter(Boolean).length;
+        // Aquí podrías añadir un indicador visual de fortaleza
+    });
+}
+</script>
+{% endblock %}

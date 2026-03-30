@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Perfil de {{ perfil_user.usuario.username }} - SupportFlow{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-white mb-2">Mi Perfil</h1>
+    <p class="text-slate-400">Gestiona tu información personal y configuración</p>
+</div>
+
+<!-- Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Sidebar - Foto y Acciones -->
+    <div class="space-y-6">
+        
+        <!-- Card de Foto de Perfil -->
+        <div class="rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden shadow-xl">
+            <div class="p-6">
+                <!-- Foto de Perfil -->
+                <div class="flex flex-col items-center text-center">
+                    {% if perfil_user.imagen %}
+                        <img src="{{ perfil_user.imagen.url }}" 
+                             alt="{{ perfil_user.usuario.username }}"
+                             class="w-32 h-32 rounded-full object-cover ring-4 ring-violet-500/30 shadow-2xl mb-4">
+                    {% else %}
+                        <div class="w-32 h-32 rounded-full bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center ring-4 ring-violet-500/30 shadow-2xl mb-4">
+                            <span class="text-4xl font-bold text-white">
+                                {{ perfil_user.usuario.username|slice:":1"|upper }}
+                            </span>
+                        </div>
+                    {% endif %}
+                    
+                    <h2 class="text-2xl font-bold text-white mb-1">
+                        {{ perfil_user.usuario.get_full_name|default:perfil_user.usuario.username }}
+                    </h2>
+                    <p class="text-slate-400 mb-1">@{{ perfil_user.usuario.username }}</p>
+                    
+                    {% if perfil_user.usuario.is_staff %}
+                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-full text-xs font-semibold mt-2">
+                        <i data-lucide="shield-check" class="w-3 h-3"></i>
+                        <span>Staff</span>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Botón Editar -->
+            <div class="px-6 pb-6">
+                <a href="{% url 'perfil_update' perfil_user.id %}" 
+                   class="flex items-center justify-center gap-2 w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all">
+                    <i data-lucide="edit-3" class="w-5 h-5"></i>
+                    <span>Editar Perfil</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Card de Estadísticas Rápidas -->
+        <div class="rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden shadow-xl">
+            <div class="px-6 py-4 border-b border-slate-700/50 bg-slate-800/30">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="activity" class="w-5 h-5 text-violet-400"></i>
+                    Actividad
+                </h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                            <i data-lucide="ticket" class="w-5 h-5 text-violet-400"></i>
+                        </div>
+                        <span class="text-slate-300">Tickets creados</span>
+                    </div>
+                    <span class="text-2xl font-bold text-white">{{ perfil_user.usuario.ticket_set.count }}</span>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                            <i data-lucide="message-circle" class="w-5 h-5 text-cyan-400"></i>
+                        </div>
+                        <span class="text-slate-300">Comentarios</span>
+                    </div>
+                    <span class="text-2xl font-bold text-white">{{ perfil_user.usuario.comentarios_creador.count }}</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Card de Información Personal -->
+        <div class="rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden shadow-xl">
+            <div class="px-6 py-4 border-b border-slate-700/50 bg-slate-800/30">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="user" class="w-5 h-5 text-violet-400"></i>
+                    Información Personal
+                </h3>
+            </div>
+            
+            <div class="divide-y divide-slate-700/50">
+                <!-- Email -->
+                <div class="p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                            <i data-lucide="mail" class="w-6 h-6 text-blue-400"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-slate-400 text-sm mb-1">Email</div>
+                            {% if perfil_user.email %}
+                                <div class="text-white font-medium break-all">{{ perfil_user.email }}</div>
+                            {% else %}
+                                <div class="text-slate-500 italic">No especificado</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Número -->
+                <div class="p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                            <i data-lucide="phone" class="w-6 h-6 text-emerald-400"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-slate-400 text-sm mb-1">Teléfono</div>
+                            {% if perfil_user.numero %}
+                                <div class="text-white font-medium">{{ perfil_user.numero }}</div>
+                            {% else %}
+                                <div class="text-slate-500 italic">No especificado</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Biografía -->
+                <div class="p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                            <i data-lucide="file-text" class="w-6 h-6 text-purple-400"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-slate-400 text-sm mb-2">Biografía</div>
+                            {% if perfil_user.biografia %}
+                                <div class="text-white leading-relaxed prose prose-invert max-w-none">
+                                    {{ perfil_user.biografia|linebreaks }}
+                                </div>
+                            {% else %}
+                                <div class="text-slate-500 italic">No hay biografía disponible</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Información de Cuenta -->
+        <div class="rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden shadow-xl">
+            <div class="px-6 py-4 border-b border-slate-700/50 bg-slate-800/30">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-violet-400"></i>
+                    Información de la Cuenta
+                </h3>
+            </div>
+            
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Fecha de Creación -->
+                    <div class="rounded-xl bg-slate-900/50 border border-slate-700/50 p-5">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                                <i data-lucide="calendar-plus" class="w-6 h-6 text-violet-400"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-slate-400 text-sm mb-1">Miembro desde</div>
+                                <div class="text-white font-semibold mb-1">hace {{ perfil_user.created|timesince }}</div>
+                                <div class="text-slate-500 text-sm">{{ perfil_user.created|date:"d/m/Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Última Actualización -->
+                    <div class="rounded-xl bg-slate-900/50 border border-slate-700/50 p-5">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                                <i data-lucide="calendar-check" class="w-6 h-6 text-cyan-400"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-slate-400 text-sm mb-1">Última actualización</div>
+                                <div class="text-white font-semibold mb-1">hace {{ perfil_user.updated|timesince }}</div>
+                                <div class="text-slate-500 text-sm">{{ perfil_user.updated|date:"d/m/Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Acciones Rápidas -->
+        <div class="rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden shadow-xl">
+            <div class="px-6 py-4 border-b border-slate-700/50 bg-slate-800/30">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="zap" class="w-5 h-5 text-violet-400"></i>
+                    Acciones Rápidas
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <a href="{% url 'ticket_list' %}" 
+                       class="flex items-center gap-3 px-5 py-4 bg-slate-900/50 hover:bg-violet-500/10 border border-slate-700 hover:border-violet-500/30 rounded-xl transition-all group">
+                        <div class="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i data-lucide="inbox" class="w-5 h-5 text-violet-400"></i>
+                        </div>
+                        <div>
+                            <div class="text-white font-medium">Mis Tickets</div>
+                            <div class="text-slate-400 text-sm">Ver todos</div>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'ticket_create' %}" 
+                       class="flex items-center gap-3 px-5 py-4 bg-slate-900/50 hover:bg-emerald-500/10 border border-slate-700 hover:border-emerald-500/30 rounded-xl transition-all group">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-400"></i>
+                        </div>
+                        <div>
+                            <div class="text-white font-medium">Nuevo Ticket</div>
+                            <div class="text-slate-400 text-sm">Crear ahora</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+lucide.createIcons();
+</script>
+{% endblock %}

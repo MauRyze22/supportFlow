@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - SupportFlow{% endblock %}
+
+{% block content %}
+
+<!-- Header del Dashboard -->
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-white mb-2">Dashboard</h1>
+    <p class="text-slate-400">Bienvenido, <span class="text-violet-400 font-medium">{{ request.user.get_full_name|default:request.user.username }}</span></p>
+</div>
+
+<!-- Tarjetas de Estadísticas -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+    
+    <!-- Total Tickets - Card Principal -->
+    <div class="lg:col-span-2">
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 p-6 shadow-2xl shadow-violet-500/30 h-full">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div class="relative z-10">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <p class="text-violet-200 text-sm font-medium mb-2">Total de Tickets</p>
+                        <h2 class="text-5xl font-bold text-white">{% if request.user.is_staff %}{{ total_tickets_admin|default:"0" }}{% else %}{{ total_tickets|default:"0" }}{% endif %}</h2>
+                    </div>
+                    <div class="bg-white/20 p-4 rounded-xl"><i data-lucide="ticket" class="w-8 h-8 text-white"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nuevos -->
+    <div class="rounded-xl bg-slate-800/50 border border-slate-700/50 p-6 hover:border-blue-500/50 transition-all h-full">
+        <div class="bg-blue-500/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4"><i data-lucide="sparkles" class="w-6 h-6 text-blue-400"></i></div>
+        <p class="text-slate-400 text-sm mb-1">Nuevos</p>
+        <h3 class="text-3xl font-bold text-white">{{ tickets_nuevos|length|default:"0" }}</h3>
+    </div>
+
+    <!-- Abiertos -->
+    <div class="rounded-xl bg-slate-800/50 border border-slate-700/50 p-6 hover:border-cyan-500/50 transition-all h-full">
+        <div class="bg-cyan-500/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4"><i data-lucide="folder-open" class="w-6 h-6 text-cyan-400"></i></div>
+        <p class="text-slate-400 text-sm mb-1">Abiertos</p>
+        <h3 class="text-3xl font-bold text-white">{{ tickets_abiertos|length|default:"0" }}</h3>
+    </div>
+
+    <!-- En Progreso -->
+    <div class="rounded-xl bg-slate-800/50 border border-slate-700/50 p-6 hover:border-amber-500/50 transition-all h-full">
+        <div class="bg-amber-500/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4"><i data-lucide="loader" class="w-6 h-6 text-amber-400"></i></div>
+        <p class="text-slate-400 text-sm mb-1">En Progreso</p>
+        <h3 class="text-3xl font-bold text-white">{{ tickets_en_progreso|length|default:"0" }}</h3>
+    </div>
+</div>
+
+<!-- Segunda fila -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="rounded-xl bg-slate-800/50 border border-slate-700/50 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-sm mb-1">Cerrados</p>
+                <h3 class="text-3xl font-bold text-white">{{ tickets_cerrados|length|default:"0" }}</h3>
+            </div>
+            <div class="bg-emerald-500/10 w-14 h-14 rounded-lg flex items-center justify-center"><i data-lucide="check-circle-2" class="w-7 h-7 text-emerald-400"></i></div>
+        </div>
+    </div>
+
+    {% if request.user.is_staff %}
+    <div class="rounded-xl bg-red-500/20 border border-red-500/30 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-red-300 text-sm mb-1">Sin Asignar</p>
+                <h3 class="text-3xl font-bold text-red-400">{{ tickets_sin_asignar|length|default:"0" }}</h3>
+            </div>
+            <div class="bg-red-500/20 w-14 h-14 rounded-lg flex items-center justify-center"><i data-lucide="alert-triangle" class="w-7 h-7 text-red-400"></i></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="rounded-xl bg-slate-800/50 border border-slate-700/50 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-slate-400 text-sm mb-1">Comentarios</p>
+                <h3 class="text-3xl font-bold text-white">{{ total_comentarios|default:"0" }}</h3>
+            </div>
+            <div class="bg-purple-500/10 w-14 h-14 rounded-lg flex items-center justify-center"><i data-lucide="message-circle" class="w-7 h-7 text-purple-400"></i></div>
+        </div>
+    </div>
+</div>
+
+<!-- Sin Asignar List -->
+{% if request.user.is_staff and tickets_sin_asignar %}
+<div class="mb-8 rounded-2xl bg-slate-800/50 border border-red-500/30 overflow-hidden shadow-xl">
+    <div class="bg-red-500/10 px-6 py-4 border-b border-red-500/20">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i>Tickets Sin Asignar</h3>
+            <span class="px-3 py-1 bg-red-500/20 text-red-300 rounded-full text-sm font-medium">{{ tickets_sin_asignar|length }}</span>
+        </div>
+    </div>
+    <div class="divide-y divide-slate-700/50">
+        {% for ticket in tickets_sin_asignar %}
+        <a href="{% url 'ticket_detail' ticket.pk %}" class="block px-6 py-4 hover:bg-slate-700/30 transition-colors group">
+            <div class="flex justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <span class="px-3 py-1 rounded-lg text-xs font-bold {% if ticket.prioridad == 'critica' %}bg-red-500/20 text-red-300{% elif ticket.prioridad == 'alta' %}bg-orange-500/20 text-orange-300{% elif ticket.prioridad == 'media' %}bg-yellow-500/20 text-yellow-300{% else %}bg-green-500/20 text-green-300{% endif %}">{{ ticket.get_prioridad_display|upper }}</span>
+                    <span class="text-violet-400 font-mono text-sm">#{{ ticket.pk }}</span>
+                </div>
+                <span class="text-slate-500 text-sm">{{ ticket.created|timesince }} atrás</span>
+            </div>
+            <h4 class="text-white font-semibold mb-2 group-hover:text-violet-400 transition-colors">{{ ticket.titulo }}</h4>
+            <p class="text-slate-400 text-sm mb-3">{{ ticket.descripcion|truncatewords:20 }}</p>
+            <div class="flex items-center justify-between">
+                {% if ticket.categoria %}
+                <span class="px-2 py-1 rounded text-xs" style="background-color: {{ ticket.categoria.color }}20; color: {{ ticket.categoria.color }};">{{ ticket.categoria.nombre }}</span>
+                {% endif %}
+                <span class="text-slate-500 text-xs">Por {{ ticket.creador.username }}</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Tabs -->
+<div class="rounded-2xl bg-slate-800/50 border border-slate-700/50 overflow-hidden shadow-xl">
+    <div class="px-6 py-4 border-b border-slate-700/50"><h3 class="text-xl font-bold text-white">Mis Tickets</h3></div>
+    
+    <div class="border-b border-slate-700/50 bg-slate-800/30">
+        <nav class="flex gap-2 px-6 overflow-x-auto">
+            <button onclick="switchTab('nuevos')" class="tab-btn active px-4 py-3 text-sm font-medium rounded-t-lg border-b-2 border-violet-500 text-violet-400 bg-violet-500/10 transition-all">
+                <span class="flex items-center gap-2 whitespace-nowrap"><i data-lucide="sparkles" class="w-4 h-4"></i>Nuevos<span class="px-2 py-0.5 bg-blue-500/30 text-blue-300 rounded-full text-xs ml-1">{{ tickets_nuevos|length }}</span></span>
+            </button>
+            <button onclick="switchTab('progreso')" class="tab-btn px-4 py-3 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                <span class="flex items-center gap-2 whitespace-nowrap"><i data-lucide="loader" class="w-4 h-4"></i>Progreso<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-full text-xs ml-1">{{ tickets_en_progreso|length }}</span></span>
+            </button>
+            <button onclick="switchTab('abiertos')" class="tab-btn px-4 py-3 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                <span class="flex items-center gap-2 whitespace-nowrap"><i data-lucide="folder-open" class="w-4 h-4"></i>Abiertos<span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 rounded-full text-xs ml-1">{{ tickets_abiertos|length }}</span></span>
+            </button>
+            <button onclick="switchTab('cerrados')" class="tab-btn px-4 py-3 text-sm font-medium rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                <span class="flex items-center gap-2 whitespace-nowrap"><i data-lucide="check-circle-2" class="w-4 h-4"></i>Cerrados<span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full text-xs ml-1">{{ tickets_cerrados|length }}</span></span>
+            </button>
+        </nav>
+    </div>
+
+    <div class="p-6">
+        <!-- Nuevos -->
+        <div id="nuevos-content" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for ticket in tickets_nuevos %}
+                <a href="{% url 'ticket_detail' ticket.pk %}" class="block rounded-xl bg-slate-800/50 border border-slate-700/50 p-5 hover:border-violet-500/50 hover:shadow-lg hover:shadow-violet-500/10 transition-all group">
+                    <div class="flex justify-between mb-4">
+                        <span class="px-3 py-1 rounded-lg text-xs font-bold {% if ticket.prioridad == 'critica' %}bg-red-500/20 text-red-300{% elif ticket.prioridad == 'alta' %}bg-orange-500/20 text-orange-300{% elif ticket.prioridad == 'media' %}bg-yellow-500/20 text-yellow-300{% else %}bg-green-500/20 text-green-300{% endif %}">{{ ticket.get_prioridad_display }}</span>
+                        <span class="text-slate-500 text-xs">{{ ticket.created|timesince }}</span>
+                    </div>
+                    <h4 class="text-white font-semibold mb-2 group-hover:text-violet-400 transition-colors line-clamp-1">{{ ticket.titulo }}</h4>
+                    <p class="text-slate-400 text-sm mb-4 line-clamp-2">{{ ticket.descripcion|truncatewords:15 }}</p>
+                    <div class="flex justify-between pt-4 border-t border-slate-700/50">
+                        <div class="flex gap-2">
+                            <img src="https://ui-avatars.com/api/?name={{ ticket.creador.username }}&background=8b5cf6&color=fff&size=64" class="w-7 h-7 rounded-full ring-2 ring-violet-500/30" alt="{{ ticket.creador.username }}">
+                            {% if ticket.asignado %}<img src="https://ui-avatars.com/api/?name={{ ticket.asignado.username }}&background=06b6d4&color=fff&size=64" class="w-7 h-7 rounded-full ring-2 ring-cyan-500/30 -ml-3" alt="{{ ticket.asignado.username }}">{% endif %}
+                        </div>
+                        <span class="flex items-center gap-1 text-slate-500 text-sm"><i data-lucide="message-circle" class="w-4 h-4"></i>{{ ticket.comentarios.count }}</span>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="col-span-full text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-800 rounded-full mb-4"><i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i></div>
+                    <p class="text-slate-500">No hay tickets nuevos</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Progreso -->
+        <div id="progreso-content" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for ticket in tickets_en_progreso %}
+                <a href="{% url 'ticket_detail' ticket.pk %}" class="block rounded-xl bg-slate-800/50 border border-slate-700/50 p-5 hover:border-violet-500/50 hover:shadow-lg hover:shadow-violet-500/10 transition-all group">
+                    <div class="flex justify-between mb-4">
+                        <span class="px-3 py-1 rounded-lg text-xs font-bold {% if ticket.prioridad == 'critica' %}bg-red-500/20 text-red-300{% elif ticket.prioridad == 'alta' %}bg-orange-500/20 text-orange-300{% elif ticket.prioridad == 'media' %}bg-yellow-500/20 text-yellow-300{% else %}bg-green-500/20 text-green-300{% endif %}">{{ ticket.get_prioridad_display }}</span>
+                        <span class="text-slate-500 text-xs">{{ ticket.created|timesince }}</span>
+                    </div>
+                    <h4 class="text-white font-semibold mb-2 group-hover:text-violet-400 transition-colors line-clamp-1">{{ ticket.titulo }}</h4>
+                    <p class="text-slate-400 text-sm mb-4 line-clamp-2">{{ ticket.descripcion|truncatewords:15 }}</p>
+                    <div class="flex justify-between pt-4 border-t border-slate-700/50">
+                        <div class="flex gap-2">
+                            <img src="https://ui-avatars.com/api/?name={{ ticket.creador.username }}&background=8b5cf6&color=fff&size=64" class="w-7 h-7 rounded-full ring-2 ring-violet-500/30">
+                            {% if ticket.asignado %}<img src="https://ui-avatars.com/api/?name={{ ticket.asignado.username }}&background=06b6d4&color=fff&size=64" class="w-7 h-7 rounded-full ring-2 ring-cyan-500/30 -ml-3">{% endif %}
+                        </div>
+                        <span class="flex items-center gap-1 text-slate-500 text-sm"><i data-lucide="message-circle" class="w-4 h-4"></i>{{ ticket.comentarios.count }}</span>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="col-span-full text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-800 rounded-full mb-4"><i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i></div>
+                    <p class="text-slate-500">No hay tickets en progreso</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Abiertos -->
+        <div id="abiertos-content" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for ticket in tickets_abiertos %}
+                <a href="{% url 'ticket_detail' ticket.pk %}" class="block rounded-xl bg-slate-800/50 border border-slate-700/50 p-5 hover:border-violet-500/50 hover:shadow-lg hover:shadow-violet-500/10 transition-all group">
+                    <div class="flex justify-between mb-4">
+                        <span class="px-3 py-1 rounded-lg text-xs font-bold {% if ticket.prioridad == 'critica' %}bg-red-500/20 text-red-300{% elif ticket.prioridad == 'alta' %}bg-orange-500/20 text-orange-300{% elif ticket.prioridad == 'media' %}bg-yellow-500/20 text-yellow-300{% else %}bg-green-500/20 text-green-300{% endif %}">{{ ticket.get_prioridad_display }}</span>
+                        <span class="text-slate-500 text-xs">{{ ticket.created|timesince }}</span>
+                    </div>
+                    <h4 class="text-white font-semibold mb-2 group-hover:text-violet-400 transition-colors line-clamp-1">{{ ticket.titulo }}</h4>
+                    <p class="text-slate-400 text-sm mb-4 line-clamp-2">{{ ticket.descripcion|truncatewords:15 }}</p>
+                    <div class="flex justify-between pt-4 border-t border-slate-700/50">
+                        <div class="flex gap-2">
+                            <img src="https://ui-avatars.com/api/?name={{ ticket.creador.username }}&background=8b5cf6&color=fff&size=64" class="w-7 h-7 rounded-full ring-2 ring-violet-500/30">
+                            {% if ticket.asignado %}<img src="https://ui-avatars.com/api/?name={{ ticket.asignado.username }}&background=06b6d4&color=fff&size=64" class="w-7 h-7 rounded-full ring-2 ring-cyan-500/30 -ml-3">{% endif %}
+                        </div>
+                        <span class="flex items-center gap-1 text-slate-500 text-sm"><i data-lucide="message-circle" class="w-4 h-4"></i>{{ ticket.comentarios.count }}</span>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="col-span-full text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-800 rounded-full mb-4"><i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i></div>
+                    <p class="text-slate-500">No hay tickets abiertos</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Cerrados -->
+        <div id="cerrados-content" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for ticket in tickets_cerrados %}
+                <a href="{% url 'ticket_detail' ticket.pk %}" class="block rounded-xl bg-slate-800/50 border border-slate-700/50 p-5 hover:border-violet-500/50 hover:shadow-lg hover:shadow-violet-500/10 transition-all group opacity-75 hover:opacity-100">
+                    <div class="flex justify-between mb-4">
+                        <span class="px-3 py-1 rounded-lg text-xs font-bold {% if ticket.prioridad == 'critica' %}bg-red-500/20 text-red-300{% elif ticket.prioridad == 'alta' %}bg-orange-500/20 text-orange-300{% elif ticket.prioridad == 'media' %}bg-yellow-500/20 text-yellow-300{% else %}bg-green-500/20 text-green-300{% endif %}">{{ ticket.get_prioridad_display }}</span>
+                        <span class="text-slate-500 text-xs">{{ ticket.created|timesince }}</span>
+                    </div>
+                    <h4 class="text-white font-semibold mb-2 group-hover:text-violet-400 transition-colors line-clamp-1">{{ ticket.titulo }}</h4>
+                    <p class="text-slate-400 text-sm mb-4 line-clamp-2">{{ ticket.descripcion|truncatewords:15 }}</p>
+                    <div class="flex justify-between pt-4 border-t border-slate-700/50">
+                        <div class="flex gap-2">
+                            <img src="https://ui-avatars.com/api/?name={{ ticket.creador.username }}&background=8b5cf6&color=fff&size=64" class="w-7 h-7 rounded-full ring-2 ring-violet-500/30">
+                            {% if ticket.asignado %}<img src="https://ui-avatars.com/api/?name={{ ticket.asignado.username }}&background=06b6d4&color=fff&size=64" class="w-7 h-7 rounded-full ring-2 ring-cyan-500/30 -ml-3">{% endif %}
+                        </div>
+                        <span class="flex items-center gap-1 text-slate-500 text-sm"><i data-lucide="message-circle" class="w-4 h-4"></i>{{ ticket.comentarios.count }}</span>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="col-span-full text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-800 rounded-full mb-4"><i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i></div>
+                    <p class="text-slate-500">No hay tickets cerrados</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+lucide.createIcons();
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-violet-500', 'text-violet-400', 'bg-violet-500/10');
+        btn.classList.add('border-transparent', 'text-slate-400');
+    });
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+    
+    event.target.closest('.tab-btn').classList.add('border-violet-500', 'text-violet-400', 'bg-violet-500/10');
+    event.target.closest('.tab-btn').classList.remove('border-transparent', 'text-slate-400');
+    document.getElementById(tab + '-content').classList.remove('hidden');
+    lucide.createIcons();
+}
+</script>
+{% endblock %}
