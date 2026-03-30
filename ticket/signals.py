@@ -1,8 +1,11 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from django.core.mail import send_mail, EmailMessage
+from decouple import config
 from django.conf import settings
 from .models import Ticket
+import resend
+
+resend.api_key= config('RESEND_API_KEY')
 
 # Variable para guardar el estado anterior
 ticket_anterior = {}
@@ -30,9 +33,9 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
         staff_emails = [email for email in staff_emails if email]  # Filtrar vacíos
         
         if staff_emails:
-            send_mail(
-                subject=f'🎫 Nuevo Ticket #{instance.pk}: {instance.titulo}',
-                message=f"""
+            resend.Emails.send({
+                "subject":f'🎫 Nuevo Ticket #{instance.pk}: {instance.titulo}',
+                "text":f"""
                         Hola equipo de soporte,
                             Se ha creado un nuevo ticket:
                             📋 Ticket: #{instance.pk}
@@ -41,10 +44,9 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
                             👤 Creado por: {instance.creador.username}
                             ⚡ Prioridad: {instance.get_prioridad_display()}
                                 SupportFlow - Sistema de Tickets """,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=list(staff_emails),
-                fail_silently=False,
-            )
+                "from":"SupportFlow <onboarding@resend.dev>",
+                "to":list(staff_emails),
+            })
         else:
             return  # Salir aquí para tickets nuevos
     
@@ -54,9 +56,9 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
 
         if estado_anterior != instance.estado:
             if instance.creador and instance.creador.email:
-                send_mail(
-                    subject=f'🔔 Actualización de Ticket #{instance.pk}',
-                    message=f"""
+                resend.Emails.send({
+                    "subject":f'🔔 Actualización de Ticket #{instance.pk}',
+                    "text":f"""
                             Hola {instance.creador.get_full_name() or instance.creador.username},
 
                             El estado de tu ticket ha sido actualizado:
@@ -68,16 +70,15 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
                             ---
                             SupportFlow - Sistema de Tickets
                             """,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[instance.creador.email],
-                    fail_silently=False,
-                )
+                    "from":"SupportFlow <onboarding@resend.dev>",
+                    "to":[instance.creador.email],
+                })
     
         if asignado_anterior != instance.asignado and instance.asignado:
             if instance.asignado.email:
-                send_mail(
-                        subject=f'📌 Te han asignado el Ticket #{instance.pk}',
-                        message=f"""
+                resend.Emails.send({
+                        "subject":f'📌 Te han asignado el Ticket #{instance.pk}',
+                        "text":f"""
                                 Hola {instance.asignado.get_full_name() or instance.asignado.username},
 
                                 Se te ha asignado un nuevo ticket:
@@ -91,8 +92,7 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
                                 ---
                                 SupportFlow - Sistema de Tickets
                                                         """,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[instance.asignado.email],
-                        fail_silently=False,
-                    )
+                        "from":"SupportFlow <onboarding@resend.dev>",
+                        "to":[instance.asignado.email],
+                    })
         del ticket_anterior[instance.pk]
