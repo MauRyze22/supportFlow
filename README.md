@@ -1,12 +1,14 @@
 # SupportFlow
 
-**Sistema de gestión de tickets de soporte con roles, filtros avanzados y notificaciones automáticas**
+**Sistema de gestión de tickets de soporte con roles, filtros avanzados y notificaciones asíncronas**
 
-[![Django](https://img.shields.io/badge/Django-5.2-green.svg)](https://www.djangoproject.com/)
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12+-blue.svg)](https://www.postgresql.org/)
+[![Django](https://img.shields.io/badge/Django-6.0-green.svg)](https://www.djangoproject.com/)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
+[![Celery](https://img.shields.io/badge/Celery-5.6-brightgreen.svg)](https://docs.celeryq.dev/)
+[![Redis](https://img.shields.io/badge/Redis-7+-red.svg)](https://redis.io/)
 
-🔗 **[Demo en vivo](https://web-production-ee2b0.up.railway.app)**
+🔗 **[Demo en vivo](https://supportflow-2mqx.onrender.com)**
 
 ---
 
@@ -31,7 +33,7 @@ Los equipos de soporte necesitan un sistema simple para gestionar tickets sin pa
 - ✅ Gestión completa de tickets con estados y prioridades
 - ✅ Sistema de roles (Admin vs Usuario)
 - ✅ Filtros avanzados y búsqueda inteligente
-- ✅ Notificaciones por email automáticas
+- ✅ Notificaciones por email asíncronas con Celery + Redis
 - ✅ Comentarios en tiempo real
 - ✅ Sistema de categorías personalizable
 - ✅ 100% gratuito y open source
@@ -55,36 +57,38 @@ Los equipos de soporte necesitan un sistema simple para gestionar tickets sin pa
 - Gestionar categorías desde el panel admin
 - Filtrar por estado, categoría, asignado, fecha
 
-**Sistema de notificaciones:**
-- Email al crear ticket (notifica a admins)
-- Email al asignar ticket (notifica al asignado)
-- Email al cambiar estado (notifica al creador)
+**Sistema de notificaciones asíncronas:**
+- Email al crear ticket (notifica a admins) — procesado en segundo plano
+- Email al asignar ticket (notifica al asignado) — sin bloquear al usuario
+- Email al cambiar estado (notifica al creador) — via Celery + Redis
 
 ---
 
 ## 🛠️ Stack tecnológico
 
-- **Backend:** Python 3.10+ | Django 5.2
+- **Backend:** Python 3.12 | Django 6.0
 - **Base de datos:** PostgreSQL (producción) | SQLite (desarrollo)
 - **Frontend:** HTML5, CSS3, JavaScript, Bootstrap 5, Lucide Icons
 - **Arquitectura:** Class-Based Views (CBV)
-- **Deployment:** Railway | Gunicorn
-- **Email:** SMTP con Gmail
+- **Tareas asíncronas:** Celery + Redis
+- **Email:** Resend API
+- **Archivos estáticos:** Whitenoise
+- **Deployment:** Render | Gunicorn
 
 ---
 
 ## 🚀 Instalación local
 
 ### Requisitos
-- Python 3.10+
-- PostgreSQL 12+ (o SQLite para pruebas rápidas)
+- Python 3.12+
+- Redis (via Docker recomendado)
 
 ### Setup
 
 ```bash
 # Clonar repositorio
-git clone https://github.com/MauRyze22/SupportFlow.git
-cd SupportFlow
+git clone https://github.com/MauRyze22/supportFlow.git
+cd supportFlow
 
 # Crear entorno virtual
 python -m venv venv
@@ -95,14 +99,23 @@ pip install -r requirements.txt
 
 # Configurar variables de entorno
 cp .env.example .env
-# Edita .env con tus datos (DB, email, SECRET_KEY)
+# Edita .env con tus datos
 
 # Migraciones y superusuario
 python manage.py migrate
 python manage.py createsuperuser
 
-# Ejecutar servidor
+# Levantar Redis con Docker
+docker run -d -p 6379:6379 --name redis-supportflow redis:alpine
+
+# Terminal 1 — Ejecutar servidor
 python manage.py runserver
+
+# Terminal 2 — Ejecutar worker de Celery (Windows)
+celery -A supportFlow worker --loglevel=info --pool=solo
+
+# Terminal 2 — Ejecutar worker de Celery (Linux/Mac)
+celery -A supportFlow worker --loglevel=info
 ```
 
 Abre http://127.0.0.1:8000
@@ -114,15 +127,23 @@ Abre http://127.0.0.1:8000
 ## 📚 Estructura del proyecto
 
 ```
-SupportFlow/
-├── supportFlow/       # Configuración Django
-├── ticket/            # App principal (models, views, forms)
+supportFlow/
+├── supportFlow/       # Configuración Django + Celery
+│   ├── settings.py
+│   ├── celery.py      # Configuración de Celery
+│   └── urls.py
+├── ticket/            # App principal
+│   ├── models.py
+│   ├── views.py
+│   ├── forms.py
+│   ├── signals.py     # Dispara tareas asíncronas
+│   └── tasks.py       # Tareas Celery (envío de emails)
 ├── accounts/          # Autenticación y perfiles
 ├── templates/         # HTML templates
 ├── static/            # CSS, JS, imágenes
 ├── screenshots/       # Capturas para README
-├── requirements.txt   # Dependencias
-└── .env.example       # Plantilla de variables
+├── requirements.txt
+└── .env.example
 ```
 
 ---
@@ -141,13 +162,32 @@ SupportFlow/
 
 ---
 
+## ⚙️ Arquitectura de notificaciones
+
+```
+Usuario crea/actualiza ticket
+           ↓
+Signal detecta el evento
+           ↓
+Signal llama tarea con .delay()
+           ↓
+Celery manda tarea a Redis (cola)  ← respuesta inmediata al usuario
+           ↓
+Worker procesa la tarea en segundo plano
+           ↓
+Email enviado via Resend API
+```
+
+---
+
 ## 🧪 Funcionalidades técnicas destacadas
 
+- **Tareas asíncronas:** Celery + Redis para emails sin bloquear al usuario
 - **Filtros avanzados:** Por estado, categoría, asignado, búsqueda de texto
 - **Paginación:** 10 tickets por página para mejor performance
 - **Optimización de queries:** Uso de `select_related` para evitar N+1 queries
 - **Seguridad:** Control de permisos estricto, usuarios solo ven sus datos
-- **UI moderna:** Diseño responsive con Tailwind-like utility classes
+- **Manejo de errores:** Fallos de email no interrumpen el flujo principal
 
 ---
 
@@ -155,13 +195,15 @@ SupportFlow/
 
 Proyecto de portfolio personal para demostrar habilidades en:
 
-✓ Class-Based Views (ListView, CreateView, UpdateView, DetailView)  
-✓ Sistema de permisos personalizado  
-✓ Filtros y paginación en Django  
-✓ Integración de email con SMTP  
-✓ Deployment en producción con PostgreSQL  
+✓ Class-Based Views (ListView, CreateView, UpdateView, DetailView)
+✓ Sistema de permisos personalizado
+✓ Filtros y paginación en Django
+✓ Tareas asíncronas con Celery + Redis
+✓ Integración de email con Resend API
+✓ Signals de Django para eventos del modelo
+✓ Deployment en producción con Render + PostgreSQL
 
-**Feedback y sugerencias son bienvenidos** → [Abrir issue](https://github.com/TuUsuario/SupportFlow/issues)
+**Feedback y sugerencias son bienvenidos** → [Abrir issue](https://github.com/MauRyze22/supportFlow/issues)
 
 ---
 
@@ -171,7 +213,7 @@ Proyecto de portfolio personal para demostrar habilidades en:
 
 Especializado en Python, Django, APIs REST y bases de datos.
 
-📧 amaurymonteagudop22@gmail.com  
+📧 amaurymonteagudop22@gmail.com
 🔗 [GitHub](https://github.com/MauRyze22) | [LinkedIn](https://www.linkedin.com/in/amaury-monteagudo-40375b3a5)
 
 ---
