@@ -1,19 +1,14 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from decouple import config
-from django.conf import settings
 from .models import Ticket
-import resend
-
-resend.api_key= config('RESEND_API_KEY')
+from .tasks import enviar_email_nuevo_ticket, enviar_email_cambio_estado, enviar_email_asignacion
 
 # Variable para guardar el estado anterior
 ticket_anterior = {}
 
 @receiver(pre_save, sender=Ticket)
 def guardar_estado_anterior(sender, instance, **kwargs):
-    """Guarda el estado anterior del ticket antes de actualizar"""
-    if instance.pk:  # Solo si el ticket ya existe
+    if instance.pk:
         try:
             ticket_viejo = Ticket.objects.get(pk=instance.pk)
             ticket_anterior[instance.pk] = {
@@ -26,73 +21,47 @@ def guardar_estado_anterior(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Ticket)
 def notificar_cambios_ticket(sender, instance, created, **kwargs):
-    """Envía emails cuando se crea o actualiza un ticket"""
     if created:
         from django.contrib.auth.models import User
-        staff_emails = User.objects.filter(is_staff=True).values_list('email', flat=True)
-        staff_emails = [email for email in staff_emails if email]  # Filtrar vacíos
-        
+        staff_emails = list(User.objects.filter(is_staff=True).values_list('email', flat=True))
+        staff_emails = [email for email in staff_emails if email]
+
         if staff_emails:
-            resend.Emails.send({
-                "subject":f'🎫 Nuevo Ticket #{instance.pk}: {instance.titulo}',
-                "text":f"""
-                        Hola equipo de soporte,
-                            Se ha creado un nuevo ticket:
-                            📋 Ticket: #{instance.pk}
-                            🎯 Título: {instance.titulo}
-                            📝 Descripción: {instance.descripcion[:200]}...
-                            👤 Creado por: {instance.creador.username}
-                            ⚡ Prioridad: {instance.get_prioridad_display()}
-                                SupportFlow - Sistema de Tickets """,
-                "from":"SupportFlow <onboarding@resend.dev>",
-                "to":list(staff_emails),
-            })
-        else:
-            return  # Salir aquí para tickets nuevos
-    
+            enviar_email_nuevo_ticket.delay(
+                ticket_pk=instance.pk,
+                titulo=instance.titulo,
+                descripcion=instance.descripcion,
+                creador_username=instance.creador.username,
+                prioridad=instance.get_prioridad_display(),
+                staff_emails=staff_emails,
+            )
+
     if instance.pk in ticket_anterior:
         estado_anterior = ticket_anterior[instance.pk]['estado']
         asignado_anterior = ticket_anterior[instance.pk]['asignado']
 
         if estado_anterior != instance.estado:
             if instance.creador and instance.creador.email:
-                resend.Emails.send({
-                    "subject":f'🔔 Actualización de Ticket #{instance.pk}',
-                    "text":f"""
-                            Hola {instance.creador.get_full_name() or instance.creador.username},
+                enviar_email_cambio_estado.delay(
+                    ticket_pk=instance.pk,
+                    titulo=instance.titulo,
+                    estado_anterior=estado_anterior,
+                    estado_nuevo=instance.estado,
+                    creador_email=instance.creador.email,
+                    creador_nombre=instance.creador.get_full_name() or instance.creador.username,
+                )
 
-                            El estado de tu ticket ha sido actualizado:
-
-                            📋 Ticket: #{instance.pk}
-                            🎯 Título: {instance.titulo}
-                            🔄 Estado anterior: {estado_anterior.upper()}
-                            🔄 Estado nuevo: {instance.estado.upper()}
-                            ---
-                            SupportFlow - Sistema de Tickets
-                            """,
-                    "from":"SupportFlow <onboarding@resend.dev>",
-                    "to":[instance.creador.email],
-                })
-    
         if asignado_anterior != instance.asignado and instance.asignado:
             if instance.asignado.email:
-                resend.Emails.send({
-                        "subject":f'📌 Te han asignado el Ticket #{instance.pk}',
-                        "text":f"""
-                                Hola {instance.asignado.get_full_name() or instance.asignado.username},
+                enviar_email_asignacion.delay(
+                    ticket_pk=instance.pk,
+                    titulo=instance.titulo,
+                    descripcion=instance.descripcion,
+                    creador_username=instance.creador.username,
+                    prioridad=instance.get_prioridad_display(),
+                    estado=instance.get_estado_display(),
+                    asignado_email=instance.asignado.email,
+                    asignado_nombre=instance.asignado.get_full_name() or instance.asignado.username,
+                )
 
-                                Se te ha asignado un nuevo ticket:
-
-                                📋 Ticket: #{instance.pk}
-                                🎯 Título: {instance.titulo}
-                                📝 Descripción: {instance.descripcion[:200]}...
-                                👤 Creado por: {instance.creador.username}
-                                ⚡ Prioridad: {instance.get_prioridad_display()}
-                                🏷️  Estado: {instance.get_estado_display()}
-                                ---
-                                SupportFlow - Sistema de Tickets
-                                                        """,
-                        "from":"SupportFlow <onboarding@resend.dev>",
-                        "to":[instance.asignado.email],
-                    })
         del ticket_anterior[instance.pk]
