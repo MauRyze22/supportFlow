@@ -32,3 +32,6 @@ staticfiles/
 Thumbs.db
 db.sqlite3
 staticfiles/
+
+.coverage
+htmlcov/
