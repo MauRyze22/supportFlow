@@ -23,10 +23,8 @@ def enviar_email_nuevo_ticket(ticket_pk, titulo, descripcion, creador_username, 
             "to": list(staff_emails),
         })
     except ResendError as e:
-        if e.status_code == 403 or 'not verified' in str(e).lower() or 'testing emails' in str(e).lower():
-            print(f'[Modo demo] Email no enviado - destinatario no verificado en Resend')
-        else:
-            print(f'Error real enviando email nuevo ticket: {e}')
+        print(f'[DEBUG] Atributos del error: {e.__dict__}')
+        print(f'[DEBUG] str(e): {str(e)}')
 
 
 @shared_task
@@ -50,10 +48,8 @@ def enviar_email_cambio_estado(ticket_pk, titulo, estado_anterior, estado_nuevo,
             "to": [creador_email],
         })
     except ResendError as e:
-        if e.status_code == 403 or 'not verified' in str(e).lower() or 'testing emails' in str(e).lower():
-            print(f'[Modo demo] Email no enviado - destinatario no verificado en Resend')
-        else:
-            print(f'Error real enviando email cambio de estado: {e}')
+        print(f'[DEBUG] Atributos del error: {e.__dict__}')
+        print(f'[DEBUG] str(e): {str(e)}')
 
 
 @shared_task
@@ -79,7 +75,5 @@ def enviar_email_asignacion(ticket_pk, titulo, descripcion, creador_username, pr
             "to": [asignado_email],
         })
     except ResendError as e:
-        if e.status_code == 403 or 'not verified' in str(e).lower() or 'testing emails' in str(e).lower():
-            print(f'[Modo demo] Email no enviado - destinatario no verificado en Resend')
-        else:
-            print(f'Error real enviando email asignacion: {e}')
+        print(f'[DEBUG] Atributos del error: {e.__dict__}')
+        print(f'[DEBUG] str(e): {str(e)}')
