@@ -27,7 +27,7 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
         staff_emails = [email for email in staff_emails if email]
 
         if staff_emails:
-            enviar_email_nuevo_ticket.delay(
+            enviar_email_nuevo_ticket(
                 ticket_pk=instance.pk,
                 titulo=instance.titulo,
                 descripcion=instance.descripcion,
@@ -42,7 +42,7 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
 
         if estado_anterior != instance.estado:
             if instance.creador and instance.creador.email:
-                enviar_email_cambio_estado.delay(
+                enviar_email_cambio_estado(
                     ticket_pk=instance.pk,
                     titulo=instance.titulo,
                     estado_anterior=estado_anterior,
@@ -53,7 +53,7 @@ def notificar_cambios_ticket(sender, instance, created, **kwargs):
 
         if asignado_anterior != instance.asignado and instance.asignado:
             if instance.asignado.email:
-                enviar_email_asignacion.delay(
+                enviar_email_asignacion(
                     ticket_pk=instance.pk,
                     titulo=instance.titulo,
                     descripcion=instance.descripcion,
