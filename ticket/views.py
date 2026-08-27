@@ -144,7 +144,7 @@ class TicketCreateView(LoginRequiredMixin, generic.CreateView):
                 message=f"El usuario: {self.request.user.username} creó un nuevo ticket.\n\n"
                         f"Título: {ticket.titulo}\n"
                         f"Descripción: {ticket.descripcion[:300]}...\n"
-                        f"Ver: http://localhost:8000{ticket.get_absolute_url()}",
+                        f"Ver: {self.request.build_absolute_uri(ticket.get_absolute_url())}",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=list(staff_emails),
                 fail_silently=False,
