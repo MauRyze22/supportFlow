@@ -16,7 +16,7 @@ def guardar_estado_anterior(sender, instance, **kwargs):
                 'asignado': ticket_viejo.asignado,
             }
         except Ticket.DoesNotExist:
-            pass
+            raise ValueError("El ticket no existe")
 
 
 @receiver(post_save, sender=Ticket)

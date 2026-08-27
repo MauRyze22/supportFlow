@@ -1,6 +1,7 @@
 from celery import shared_task
 from decouple import config
 import resend
+from resend.exceptions import ResendError
 
 resend.api_key = config('RESEND_API_KEY')
 
@@ -21,8 +22,11 @@ def enviar_email_nuevo_ticket(ticket_pk, titulo, descripcion, creador_username, 
             "from": "SupportFlow <onboarding@resend.dev>",
             "to": list(staff_emails),
         })
-    except Exception as e:
-        print(f'Error enviando email nuevo ticket: {e}')
+    except ResendError as e:
+        if e.status_code == 403 or 'not verified' in str(e).lower() or 'testing emails' in str(e).lower():
+            print(f'[Modo demo] Email no enviado - destinatario no verificado en Resend')
+        else:
+            print(f'Error real enviando email nuevo ticket: {e}')
 
 
 @shared_task
@@ -45,8 +49,11 @@ def enviar_email_cambio_estado(ticket_pk, titulo, estado_anterior, estado_nuevo,
             "from": "SupportFlow <onboarding@resend.dev>",
             "to": [creador_email],
         })
-    except Exception as e:
-        print(f'Error enviando email cambio estado: {e}')
+    except ResendError as e:
+        if e.status_code == 403 or 'not verified' in str(e).lower() or 'testing emails' in str(e).lower():
+            print(f'[Modo demo] Email no enviado - destinatario no verificado en Resend')
+        else:
+            print(f'Error real enviando email cambio de estado: {e}')
 
 
 @shared_task
@@ -71,5 +78,8 @@ def enviar_email_asignacion(ticket_pk, titulo, descripcion, creador_username, pr
             "from": "SupportFlow <onboarding@resend.dev>",
             "to": [asignado_email],
         })
-    except Exception as e:
-        print(f'Error enviando email asignación: {e}')
+    except ResendError as e:
+        if e.status_code == 403 or 'not verified' in str(e).lower() or 'testing emails' in str(e).lower():
+            print(f'[Modo demo] Email no enviado - destinatario no verificado en Resend')
+        else:
+            print(f'Error real enviando email asignacion: {e}')

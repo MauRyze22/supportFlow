@@ -37,6 +37,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ================================
+    // USER PROFILE DROPDOWN
+    // ================================
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    
+    if (userMenuBtn && userDropdown) {
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('hidden');
+        });
+        
+        // Cerrar al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+    }
+    
+    // ================================
     // TABS FUNCTIONALITY
     // ================================
     window.switchTab = function(tabName) {
@@ -171,6 +191,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Cerrar menú móvil
             if (mobileMenu) {
                 mobileMenu.classList.add('hidden');
+            }
+            
+            // Cerrar dropdown de perfil
+            if (userDropdown) {
+                userDropdown.classList.add('hidden');
             }
         }
     });
